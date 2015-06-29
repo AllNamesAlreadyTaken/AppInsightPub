@@ -1,0 +1,12 @@
+Once you have a group of databases and some good data prepared with linked servers you're ready to start
+integrating your node environment so you can serve links into your sql servers, and out to the public if
+requested.
+
+So at this point, again assuming you've installed node and inherently npm, we'll begin with the following.
+If you arrived at this page but are uncertain where to start, go back to the document on working within SQL.
+
+There's a few packages you're going to need to get with npm so begin by creating the folder you want 
+your work to be in.  Change to that directory and begin by installing express, and node-mssql.
+
+Initialize an empty node project by typing <code>NPM INIT </code>
+
