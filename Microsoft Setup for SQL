@@ -1,0 +1,50 @@
+The first order of business is to prepare your environment for an admin-level query.
+
+First, you'll need to allow access to all of the servers that contain app data you would like to query from.
+In the environment I'll be detailing, this was to enable all virtualPC## instances with alias names using the 
+cliconfig executables (NOTE: In 64-bit machines, you are required to set the 64-bit cliconfig settings, where 
+searching for this executable from windows brings up the 32-bit settings view - there is no denotation of this
+being the 32-bit or 64-bit settings, and this is often the most confusing setting to use alias in SQL Server).  
+To reach it, you must go into your windows folder, and the look for "cliconfig.exe" in both "../windows/system" for
+the 32-bit settings, and in "../windows/SYSWOW64" for the 64-bit settings. 
+For a view of cliconfig <a href="http://docs.sepialine.com/pages/viewpage.action?pageId=1376566">cliconfig gui</a>
+
+After you have set the appropriate alias configurations, you need to link these servers from within your master
+instance of SQL Server.  For me, it was "MikeDellPC" and in SQL Configuration Manager it was the "MSSQLSERVER"
+instance.  If you arent' familiar with the SQL Server Configuration Manager, you will want to research it a bit
+as it seems to be common practice that a server needs restarted using it, you can find more information on SQL
+Server Configuration Manager <a href="http://www.exforsys.com/images/vbnet/sourecode/SQL%20Server%202005/Fig38.JPG">here.</a>
+
+I created 1 master instance and I recommend you do the same, from this master instance I first configured the CLI 
+alias names. The second part of the configuration process you need to complete to prepare your environment is to
+create linked servers.  You can do this @ the server instance level in the SQL Server GUI.  <a href="http://wiki.servicenow.com/images/0/00/New_linked_server.png"> Example </a>
+In the server you're working with, you can drop down "Server objects" and right click over "Linked Servers" then you
+can "Add new Linked Server" and here you can configure as needed for a SQL Server instance in any of the recently
+ALIASED instances you've set in cliconfig.
+
+Now, when you create a SQL String for a query it can be done as so:
+
+SELECT * FROM [ServerName].[DataBaseName].[TableName] /*insert any WHERE clause here */ ;
+NOTE: You are only allowed 3 levels deep in "dot" declaration, so if you decide to go into your tables, 
+you will need to first create a lookup table of sorts by Server and PCName.
+
+At this point, I've designed a table I use as a master table to create select statements out of
+each by selecting a select string as a column, and also selecting * from each PC, so the following:
+SELECT 'SELECT PCName, dbName, * FROM ' + Servername + '.dbo.' + dbName + ' /*Where clause*/ AS SQLString UNION', * FROM Server.db;
+gives me a result set as I'd expect, but with a first column "SQLString" like:
+'SELECT PCName, dbName, * FROM VirtualPC1.dbo.dbName UNION '
+'SELECT PCName, dbName, * FROM VirtualPC2.dbo.dbName UNION '
+'SELECT PCName, dbName, * FROM VirtualPC3.dbo.dbName UNION '
+
+This gives me a big select statement of all my existing servers/db's(pc's), and if I wanted tables.
+IF you were to get more fancy @ this point, you can create a looping structure that executes a set, or
+even series of sets of processes to be self-consumed and create a series of admin like views.
+
+I typically will set the select statement itself, plus the VirtualPC##, and dbName so that I can join,
+select from, or delete from those 2 criteria filtered by the where clause if neccesary.  This solves 1
+part of the issue, which is knowing where customers are.  Once the base Lookup table is created, which
+takes a considerable amount of leg work to prepare you can self-consume the table itself to dig levels
+deeper and get more specific result sets by Server/PC/dbName/ under any conditions you declare in the
+where clause.  You can also create joins on the Server/PCName/dbNames and add in where clauses.  This is
+where some of ther real power comes from.  I'll show you how I started integrating NodeJS in the following
+file.
